@@ -4,6 +4,8 @@ import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 
+import routes from "./routes";
+
 // Configuración de variables de entorno
 dotenv.config();
 
@@ -32,7 +34,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Rutas
-app.use("/api", require("./routes/authentication"));
+app.use("/api", routes);
 
 app.set("puerto", process.env.PORT || 4000);
 app.listen(app.get("puerto"), () => {

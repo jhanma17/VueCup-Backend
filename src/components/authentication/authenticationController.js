@@ -1,7 +1,4 @@
-import express from "express";
-import User from "../models/user.js";
-
-const router = express.Router();
+import User from "../user/userModel.js";
 
 // Hash Contraseña
 const bcrypt = require("bcrypt");
@@ -10,7 +7,7 @@ const saltRounds = 10;
 // Token
 const jwt = require("jsonwebtoken");
 
-router.post("/login", async (req, res) => {
+const login = async (req, res) => {
   const body = req.body;
   try {
     //Evaluar si el email existe
@@ -47,9 +44,9 @@ router.post("/login", async (req, res) => {
       error,
     });
   }
-});
+};
 
-router.post("/sign-up", async (req, res) => {
+const signUp = async (req, res) => {
   const body = req.body;
   try {
     //Evaluar si el email existe
@@ -85,7 +82,6 @@ router.post("/sign-up", async (req, res) => {
       error,
     });
   }
-});
+};
 
-// Exportamos la configuración de express app
-module.exports = router;
+module.exports = { login, signUp };
