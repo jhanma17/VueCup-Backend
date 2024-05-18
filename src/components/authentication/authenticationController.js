@@ -1,84 +1,86 @@
 import User from "../user/userModel.js";
 
-// Hash Contraseña
-const bcrypt = require("bcrypt");
-const saltRounds = 10;
+import dotenv from "dotenv";
+import admin from "firebase-admin";
 
-// Token
-const jwt = require("jsonwebtoken");
+// Configuración de variables de entorno
+dotenv.config();
 
-const login = async (req, res) => {
-  const body = req.body;
+const serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
+const auth = admin.auth();
+
+const signUp = async (req, res) => {
+  const { name, token } = req.body;
+
   try {
+    const decodedToken = await auth.verifyIdToken(token);
+
     //Evaluar si el email existe
-    const user = await User.findOne({ email: body.email });
+    const user = await User.findOne({ email: decodedToken.email });
 
-    if (!user) {
+    if (user) {
       return res.status(400).json({
-        mensaje: "Usuario o contraseña incorrectos - email",
-        error,
+        mensaje: "The email is already registered",
       });
     }
 
-    //Evaluar si la contraseña es correcta
-    if (!bcrypt.compareSync(body.password, user.password)) {
-      return res.status(400).json({
-        mensaje: "Usuario o contraseña incorrectos - password",
-        error,
-      });
-    }
+    //Registrar el usuario
+    const createdUser = await User.create({
+      name,
+      email: decodedToken.email,
+      loginType: "EMAIL",
+    });
 
-    //Generar el token
-    const token = jwt.sign(
-      {
-        data: user,
-      },
-      "segurinendo",
-      { expiresIn: 60 * 60 * 3 }
-    );
-
-    res.json({ user, token });
+    return res.json({ user: createdUser, token });
   } catch (error) {
     return res.status(500).json({
-      mensaje: "Ocurrio un error",
+      mensaje: "An error has occurred",
       error,
     });
   }
 };
 
-const signUp = async (req, res) => {
-  const body = req.body;
+const login = async (req, res) => {
+  const { token, type } = req.body;
   try {
-    //Evaluar si el email existe
-    const user = await User.findOne({ email: body.email });
+    const decodedToken = await auth.verifyIdToken(token);
 
-    if (user) {
-      return res.status(400).json({
-        mensaje: "El email ya existe",
-        error,
-      });
+    //Evaluar si el email existe
+    const user = await User.findOne({ email: decodedToken.email });
+
+    if (!user) {
+      try {
+        //Registrar el usuario
+        const createdUser = await User.create({
+          name: decodedToken.name || decodedToken.email.split("@")[0],
+          email: decodedToken.email,
+          loginType: type,
+        });
+
+        return res.json({ user: createdUser, token });
+      } catch (error) {
+        return res.status(500).json({
+          mensaje: "An error has occurred",
+          error,
+        });
+      }
+    } else {
+      if (user.loginType !== type) {
+        return res.status(400).json({
+          mensaje: "The email is already registered",
+        });
+      }
     }
 
-    //Encriptar la contraseña
-    const salt = bcrypt.genSaltSync(saltRounds);
-    body.password = bcrypt.hashSync(body.password, salt);
-
-    //Registrar el usuario
-    const userDB = await User.create(body);
-
-    //Generar el token
-    const token = jwt.sign(
-      {
-        data: userDB,
-      },
-      "segurinendo",
-      { expiresIn: 60 * 60 * 3 }
-    );
-
-    res.json({ userDB, token });
+    return res.json({ user, token });
   } catch (error) {
     return res.status(500).json({
-      mensaje: "Ocurrio un error",
+      mensaje: "An error has occurred",
       error,
     });
   }

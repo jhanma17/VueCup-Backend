@@ -9,22 +9,20 @@ const statuses = {
   message: "{VALUE} is not a valid status.",
 };
 
+const loginTypes = {
+  values: ["EMAIL", "GITHUB", "GOOGLE", "GITLAB"],
+  message: "{VALUE} is not a valid login type.",
+};
+
 const UserSchema = new Schema({
   name: { type: String, required: [true, "Name is required."] },
   email: { type: String, required: [true, "Email is required."], unique: true },
-  password: { type: String, required: [true, "Password is required."] },
   date: { type: Date, default: Date.now },
   status: { type: String, default: "ACTIVE", enum: statuses },
+  loginType: { type: String, default: "EMAIL", enum: loginTypes },
 });
 
 UserSchema.plugin(uniqueValidator, { message: "{PATH} must be unique." });
-
-UserSchema.methods.toJSON = function () {
-  let user = this;
-  let userObject = user.toObject();
-  delete userObject.password;
-  return userObject;
-};
 
 const User = mongoose.model("User", UserSchema);
 
