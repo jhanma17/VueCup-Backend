@@ -4,7 +4,7 @@ import { verifyToken } from "../authentication/authenticationUtils";
 
 //Project crud
 
-export const createProject = async (req, res) => {
+const createProject = async (req, res) => {
   try {
     const { name } = req.body;
 
@@ -36,6 +36,31 @@ export const createProject = async (req, res) => {
   }
 };
 
+const getProjects = async (req, res) => {
+  try {
+    const token = req.headers.authorization;
+
+    const userId = await verifyToken(token);
+
+    if (!userId) {
+      return res.status(401).json({
+        mensaje: "Unauthorized",
+      });
+    }
+
+    const projects = await Project.find({ owner: userId });
+
+    return res.json({ projects });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      mensaje: "An error has occurred",
+      error,
+    });
+  }
+};
+
 module.exports = {
   createProject,
+  getProjects,
 };

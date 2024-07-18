@@ -24,6 +24,8 @@ const UserSchema = new Schema({
 
 UserSchema.plugin(uniqueValidator, { message: "{PATH} must be unique." });
 
+UserSchema.set("timestamps", true);
+
 const User = mongoose.model("User", UserSchema);
 
 export default User;

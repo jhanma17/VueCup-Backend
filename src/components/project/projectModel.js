@@ -14,6 +14,8 @@ const ProjectSchema = new Schema({
   preview: { type: String, required: false },
 });
 
+ProjectSchema.set("timestamps", true);
+
 const Project = mongoose.model("Project", ProjectSchema);
 
 export default Project;

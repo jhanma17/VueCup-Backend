@@ -6,6 +6,6 @@ import authenticationRoutes from "./components/authentication/authenticationRout
 import projectRoutes from "./components/project/projectRoutes";
 
 router.use("/authentication", authenticationRoutes);
-router.use("/project", projectRoutes);
+router.use("/projects", projectRoutes);
 
 export default router;
