@@ -1,4 +1,5 @@
 import Project from "./projectModel";
+import Screen from "../screen/screenModel";
 
 import { verifyToken } from "../authentication/authenticationUtils";
 
@@ -22,16 +23,19 @@ const createProject = async (req, res) => {
       name,
       height: 0,
       width: 0,
-      preview: "",
       owner: userId,
+    });
+
+    await Screen.create({
+      name: "Screen 1",
+      project: project._id,
     });
 
     return res.json({ project });
   } catch (error) {
-    console.log(error);
     return res.status(500).json({
       mensaje: "An error has occurred",
-      error,
+      error: error.message,
     });
   }
 };
@@ -52,10 +56,9 @@ const getProjects = async (req, res) => {
 
     return res.json({ projects });
   } catch (error) {
-    console.log(error);
     return res.status(500).json({
       mensaje: "An error has occurred",
-      error,
+      error: error.message,
     });
   }
 };
