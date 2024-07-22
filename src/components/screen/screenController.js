@@ -1,6 +1,7 @@
 import Screen from "./screenModel";
 
 import Project from "../project/projectModel";
+import Component from "../component/componentModel";
 
 import { verifyToken } from "../authentication/authenticationUtils";
 
@@ -35,6 +36,23 @@ const createScreen = async (req, res) => {
     const screen = await Screen.create({
       name,
       project,
+    });
+
+    const rootComponent = await Component.create({
+      screen: screen._id,
+      owner: userId,
+      type: "Root",
+      name: "Root",
+      isCustom: false,
+    });
+
+    await Component.create({
+      screen: screen._id,
+      owner: userId,
+      type: "RootTemplate",
+      name: "Canvas",
+      isCustom: false,
+      father: rootComponent._id,
     });
 
     projectToUpdate.updatedAt = new Date();
