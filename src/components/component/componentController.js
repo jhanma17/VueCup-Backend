@@ -285,7 +285,7 @@ const updateComponent = async (req, res) => {
       });
     }
 
-    if (projectToUpdate.owner.toString() !== userId) {
+    if (projectToUpdate.owner.toString() != userId) {
       return res.status(401).json({
         mensaje: "Unauthorized",
       });
