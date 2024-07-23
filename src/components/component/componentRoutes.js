@@ -6,6 +6,7 @@ import {
   renameComponent,
   deleteComponent,
   updateComponent,
+  replaceFather,
 } from "./componentController";
 
 const router = express.Router();
@@ -17,6 +18,8 @@ router.post("/create", createComponent);
 router.patch("/rename", renameComponent);
 
 router.patch("/update", updateComponent);
+
+router.patch("/reparent", replaceFather);
 
 router.delete("/delete/:component", deleteComponent);
 

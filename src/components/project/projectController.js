@@ -1,5 +1,4 @@
 import Project from "./projectModel";
-import Screen from "../screen/screenModel";
 
 import { verifyToken } from "../authentication/authenticationUtils";
 
@@ -24,11 +23,6 @@ const createProject = async (req, res) => {
       height: 0,
       width: 0,
       owner: userId,
-    });
-
-    await Screen.create({
-      name: "Screen 1",
-      project: project._id,
     });
 
     return res.json({ project });

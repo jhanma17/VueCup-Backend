@@ -4,6 +4,7 @@ import Screen from "../screen/screenModel";
 import Project from "../project/projectModel";
 
 import { verifyToken } from "../authentication/authenticationUtils";
+import { verifyScreenOwnership } from "./componentUtils";
 
 const createComponent = async (req, res) => {
   try {
@@ -19,23 +20,9 @@ const createComponent = async (req, res) => {
       });
     }
 
-    const screenToUpdate = await Screen.findById(screen);
+    const isScreenOwner = await verifyScreenOwnership(screen, userId);
 
-    if (!screenToUpdate) {
-      return res.status(404).json({
-        mensaje: "Screen not found",
-      });
-    }
-
-    const projectToUpdate = await Project.findById(screenToUpdate.project);
-
-    if (!projectToUpdate) {
-      return res.status(404).json({
-        mensaje: "Project not found",
-      });
-    }
-
-    if (projectToUpdate.owner.toString() != userId) {
+    if (!isScreenOwner) {
       return res.status(401).json({
         mensaje: "Unauthorized",
       });
@@ -50,14 +37,6 @@ const createComponent = async (req, res) => {
       father,
       isCustom,
     });
-
-    screenToUpdate.updatedAt = new Date();
-
-    await screenToUpdate.save();
-
-    projectToUpdate.updatedAt = new Date();
-
-    await projectToUpdate.save();
 
     return res.json({ component });
   } catch (error) {
@@ -83,23 +62,9 @@ const getComponents = async (req, res) => {
       });
     }
 
-    const screenToUpdate = await Screen.findById(screen);
+    const isScreenOwner = await verifyScreenOwnership(screen, userId);
 
-    if (!screenToUpdate) {
-      return res.status(404).json({
-        mensaje: "Screen not found",
-      });
-    }
-
-    const projectToUpdate = await Project.findById(screenToUpdate.project);
-
-    if (!projectToUpdate) {
-      return res.status(404).json({
-        mensaje: "Project not found",
-      });
-    }
-
-    if (projectToUpdate.owner.toString() != userId) {
+    if (!isScreenOwner) {
       return res.status(401).json({
         mensaje: "Unauthorized",
       });
@@ -139,23 +104,12 @@ const renameComponent = async (req, res) => {
       });
     }
 
-    const screenToUpdate = await Screen.findById(componentToUpdate.screen);
+    const isScreenOwner = await verifyScreenOwnership(
+      componentToUpdate.screen,
+      userId
+    );
 
-    if (!screenToUpdate) {
-      return res.status(404).json({
-        mensaje: "Screen not found",
-      });
-    }
-
-    const projectToUpdate = await Project.findById(screenToUpdate.project);
-
-    if (!projectToUpdate) {
-      return res.status(404).json({
-        mensaje: "Project not found",
-      });
-    }
-
-    if (projectToUpdate.owner.toString() !== userId) {
+    if (!isScreenOwner) {
       return res.status(401).json({
         mensaje: "Unauthorized",
       });
@@ -164,14 +118,6 @@ const renameComponent = async (req, res) => {
     componentToUpdate.name = name;
 
     await componentToUpdate.save();
-
-    screenToUpdate.updatedAt = new Date();
-
-    await screenToUpdate.save();
-
-    projectToUpdate.updatedAt = new Date();
-
-    await projectToUpdate.save();
 
     return res.json({ component: componentToUpdate });
   } catch (error) {
@@ -205,37 +151,18 @@ const deleteComponent = async (req, res) => {
       });
     }
 
-    const screenToUpdate = await Screen.findById(componentToDelete.screen);
+    const isScreenOwner = await verifyScreenOwnership(
+      componentToDelete.screen,
+      userId
+    );
 
-    if (!screenToUpdate) {
-      return res.status(404).json({
-        mensaje: "Screen not found",
-      });
-    }
-
-    const projectToUpdate = await Project.findById(screenToUpdate.project);
-
-    if (!projectToUpdate) {
-      return res.status(404).json({
-        mensaje: "Project not found",
-      });
-    }
-
-    if (projectToUpdate.owner.toString() !== userId) {
+    if (!isScreenOwner) {
       return res.status(401).json({
         mensaje: "Unauthorized",
       });
     }
 
     await Component.findByIdAndDelete(component);
-
-    screenToUpdate.updatedAt = new Date();
-
-    await screenToUpdate.save();
-
-    projectToUpdate.updatedAt = new Date();
-
-    await projectToUpdate.save();
 
     return res.json({ mensaje: "Component deleted" });
   } catch (error) {
@@ -269,23 +196,12 @@ const updateComponent = async (req, res) => {
       });
     }
 
-    const screenToUpdate = await Screen.findById(componentToUpdate.screen);
+    const isScreenOwner = await verifyScreenOwnership(
+      componentToUpdate.screen,
+      userId
+    );
 
-    if (!screenToUpdate) {
-      return res.status(404).json({
-        mensaje: "Screen not found",
-      });
-    }
-
-    const projectToUpdate = await Project.findById(screenToUpdate.project);
-
-    if (!projectToUpdate) {
-      return res.status(404).json({
-        mensaje: "Project not found",
-      });
-    }
-
-    if (projectToUpdate.owner.toString() != userId) {
+    if (!isScreenOwner) {
       return res.status(401).json({
         mensaje: "Unauthorized",
       });
@@ -295,13 +211,52 @@ const updateComponent = async (req, res) => {
 
     await componentToUpdate.save();
 
-    screenToUpdate.updatedAt = new Date();
+    return res.json({ component: componentToUpdate });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      mensaje: "An error has occurred",
+      error: error.message,
+    });
+  }
+};
 
-    await screenToUpdate.save();
+const replaceFather = async (req, res) => {
+  try {
+    const { component, father } = req.body;
 
-    projectToUpdate.updatedAt = new Date();
+    const token = req.headers.authorization;
 
-    await projectToUpdate.save();
+    const userId = await verifyToken(token);
+
+    if (!userId) {
+      return res.status(401).json({
+        mensaje: "Unauthorized",
+      });
+    }
+
+    const componentToUpdate = await Component.findById(component);
+
+    if (!componentToUpdate) {
+      return res.status(404).json({
+        mensaje: "Component not found",
+      });
+    }
+
+    const isScreenOwner = await verifyScreenOwnership(
+      componentToUpdate.screen,
+      userId
+    );
+
+    if (!isScreenOwner) {
+      return res.status(401).json({
+        mensaje: "Unauthorized",
+      });
+    }
+
+    componentToUpdate.father = father;
+
+    await componentToUpdate.save();
 
     return res.json({ component: componentToUpdate });
   } catch (error) {
@@ -319,4 +274,5 @@ export {
   renameComponent,
   deleteComponent,
   updateComponent,
+  replaceFather,
 };
