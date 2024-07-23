@@ -15,7 +15,7 @@ const verifyScreenOwnership = async (screen, userId) => {
       return false;
     }
 
-    if (projectToUpdate.owner != userId) {
+    if (projectToUpdate.owner.toString() != userId) {
       return false;
     }
 
