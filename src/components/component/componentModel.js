@@ -21,6 +21,7 @@ const ComponentSchema = new Schema({
     required: false,
     ref: "Component",
   },
+  childIndex: { type: Number, required: false },
   isCustom: { type: Boolean, required: false },
 });
 

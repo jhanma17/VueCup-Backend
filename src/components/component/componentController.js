@@ -1,8 +1,5 @@
 import Component from "./componentModel";
 
-import Screen from "../screen/screenModel";
-import Project from "../project/projectModel";
-
 import { verifyToken } from "../authentication/authenticationUtils";
 import { verifyScreenOwnership } from "./componentUtils";
 
@@ -28,6 +25,8 @@ const createComponent = async (req, res) => {
       });
     }
 
+    const childIndex = await Component.countDocuments({ father });
+
     const component = await Component.create({
       screen,
       owner: userId,
@@ -35,6 +34,7 @@ const createComponent = async (req, res) => {
       type,
       props,
       father,
+      childIndex,
       isCustom,
     });
 
@@ -70,7 +70,10 @@ const getComponents = async (req, res) => {
       });
     }
 
-    const components = await Component.find({ screen }).sort({ createdAt: 1 });
+    //find all components that belong to the screen and sort them by childIndex
+    const components = await Component.find({ screen }).sort({
+      childIndex: 1,
+    });
 
     return res.json({ components });
   } catch (error) {
